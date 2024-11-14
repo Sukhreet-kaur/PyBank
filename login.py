@@ -23,6 +23,9 @@ mycur.execute("""
 def forget():
     subprocess.Popen(["python", "forget.py"])
     root.destroy()
+def delete():
+    subprocess.Popen(["Python", "delete.py"])
+    root.quit()
 def open_create_account():
     subprocess.Popen(["python", "newaccount.py"])
     root.destroy()

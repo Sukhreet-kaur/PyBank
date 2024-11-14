@@ -17,6 +17,9 @@ def update1():
 def dash():
     subprocess.Popen(["Python","dashboard.py"])
     root.quit()
+def delete1():
+    subprocess.Popen(["Python", "delete.py"])
+    root.quit()
 def cardinfo():
     mycur.execute("SELECT * FROM login")
     a = mycur.fetchone()
@@ -105,6 +108,7 @@ img8 = ImageTk.PhotoImage(img8)
 Label(frame,image=img8,bg="white",cursor="hand2").place(x=30,y=430)
 delete=Label(frame,text="Delete Account",cursor="hand2",font=("Calibri",14),fg="dark blue",bg="white")
 delete.place(x=110,y=430)
+delete.bind("<Button-1>", lambda e: delete1())
 ##logout
 img9 = Image.open("logout.jpg")
 img9 = img9.resize((22, 22), Image.Resampling.LANCZOS)

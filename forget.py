@@ -5,7 +5,9 @@ from PIL import Image, ImageTk
 import random
 import mysql.connector
 
-
+def delete1():
+    subprocess.Popen(["Python", "delete.py"])
+    root.quit()
 def set():
     mydb = mysql.connector.connect(host="localhost", user="root", password="sk270405", database='PyBank')
     mycur = mydb.cursor()
