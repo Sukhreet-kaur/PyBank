@@ -211,7 +211,8 @@ city.place(x=370, y=350)
 city.insert(0, 'City')  # Now this works
 Frame(root,width=280,height=2,bg="black").place(x=370,y=370)
 city.bind('<FocusIn>',on_enterc)
+Button(root,width=30,pady=7,text="Update Account",command=change,bg="Orange",fg="white",border=0,font=("Calibri",13,'bold')).place(x=370,y=400)
 city.bind('<FocusOut>',on_leavec)
 
-Button(root,width=30,pady=7,text="Update Account",command=change,bg="Orange",fg="white",border=0,font=("Calibri",13,'bold')).place(x=370,y=400)
+
 root.mainloop()
