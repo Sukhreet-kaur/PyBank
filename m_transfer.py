@@ -27,7 +27,9 @@ def generate_captcha(length=6):
 
 # Example usage
 captcha_text = generate_captcha()
-def deposit1():
+
+
+def transfer1():
     # Ensure the transactions table exists
     mycur.execute("""
         CREATE TABLE IF NOT EXISTS transactions (
@@ -40,29 +42,29 @@ def deposit1():
     """)
     mydb.commit()
 
-    # Fetch account number from login table
+    # Fetch the logged-in user's account number
     try:
         mycur.execute("SELECT account_no FROM login LIMIT 1")  # Adjust if login table structure varies
         result = mycur.fetchone()
         if result is None:
             messagebox.showerror("Error", "No account is logged in.")
             return
-        account_no = result[0]
+        sender_account_no = result[0]
     except mysql.connector.Error as err:
         messagebox.showerror("Database Error", f"Error fetching account number: {err}")
         return
 
     # Retrieve user input
-    account_holder_name = user.get()
-    description = 'deposit'
+    recipient_name = user.get()
+    description = 'transfer'
     amount_value = amount.get()
     captcha_code = captche.get()
 
     # Check if any field is empty
-    if (not account_holder_name or account_holder_name == "Account Holder Name" or
-        not description or description == "Description" or
-        not amount_value or amount_value == "Amount ( ₹ )" or
-        not captcha_code or captcha_code == "Captche Code"):
+    if (not recipient_name or recipient_name == "Account Holder Name" or
+            not description or description == "Description" or
+            not amount_value or amount_value == "Amount ( ₹ )" or
+            not captcha_code or captcha_code == "Captche Code"):
         messagebox.showerror("Input Error", "All fields are required!")
         return
 
@@ -79,26 +81,48 @@ def deposit1():
         messagebox.showerror("Input Error", "Invalid amount!")
         return
 
-    # Insert transaction into the database
+    # Verify recipient exists and retrieve their account number
     try:
+        # Replace 'name' with the correct column name for account holder in your 'accounts' table
+        mycur.execute("SELECT account_no FROM accounts WHERE name = %s", (recipient_name,))
+        recipient_result = mycur.fetchone()
+        if recipient_result is None:
+            messagebox.showerror("Error", "Recipient account holder not found!")
+            return
+        recipient_account_no = recipient_result[0]
+    except mysql.connector.Error as err:
+        messagebox.showerror("Database Error", f"Error fetching recipient account: {err}")
+        return
+
+    # Insert transaction and update balances
+    try:
+        # Insert transaction into the transactions table
         mycur.execute("""
             INSERT INTO transactions (account_no, account_holder_name, description, amount)
             VALUES (%s, %s, %s, %s)
-        """, (account_no, account_holder_name, description, amount_value))
+        """, (sender_account_no, recipient_name, description, amount_value))
         mydb.commit()
 
-        # Update the balance in the accounts table
+        # Deduct amount from sender's balance
+        mycur.execute("""
+            UPDATE accounts
+            SET balance = balance - %s
+            WHERE account_no = %s
+        """, (amount_value, sender_account_no))
+
+        # Add amount to recipient's balance
         mycur.execute("""
             UPDATE accounts
             SET balance = balance + %s
             WHERE account_no = %s
-        """, (amount_value, account_no))
+        """, (amount_value, recipient_account_no))
         mydb.commit()
 
-        messagebox.showinfo("Success", "Money deposited successfully!")
+        messagebox.showinfo("Success", f"Money successfully transferred to {recipient_name}!")
     except mysql.connector.Error as err:
         mydb.rollback()
         messagebox.showerror("Database Error", f"Error: {err}")
+
 
 def on_entern(e):
     user.delete(0,'end')
@@ -106,7 +130,7 @@ def on_leaven(e):
     name=user.get()
 
     if name=='':
-        user.insert(0,'Account Holder Name')
+        user.insert(0,'Account Holder name')
 def on_enterd(e):
     dis.delete(0,'end')
 def on_leaved(e):
@@ -179,7 +203,6 @@ img3 = ImageTk.PhotoImage(img3)
 Label(frame,image=img3,bg="white",cursor="hand2").place(x=30,y=230)
 transfer=Label(frame,text="Quick Transfer",cursor="hand2",font=("Calibri",14),fg="dark blue",bg="white")
 transfer.place(x=110,y=230)
-transfer.bind("<Button-1>", lambda e: mot())
 ##DEposit
 img4 = Image.open("deposit.jpg")
 img4 = img4.resize((25, 25), Image.Resampling.LANCZOS)
@@ -187,7 +210,6 @@ img4 = ImageTk.PhotoImage(img4)
 Label(frame,image=img4,bg="white",cursor="hand2").place(x=30,y=285)
 deposit=Label(frame,text="Deposit",cursor="hand2",font=("Calibri",14),fg="dark blue",bg="white")
 deposit.place(x=110,y=285)
-deposit.bind("<Button-1>", lambda e: dot())
 #update
 img6 = Image.open("update.jpg")
 img6 = img6.resize((25, 25), Image.Resampling.LANCZOS)
@@ -214,12 +236,12 @@ delete=Label(frame,text="Logout",cursor="hand2",font=("Calibri",14),fg="dark blu
 delete.place(x=110,y=430)
 delete.bind("<Button-1>", lambda e: logout())
 
-pic = Image.open("moneyd.jpg")
+pic = Image.open("money_transfer.jpg")
 pic = pic.resize((410, 476), Image.Resampling.LANCZOS)
 pic = ImageTk.PhotoImage(pic)
 Label(root,image=pic,bg="white",cursor="hand2").place(x=730,y=30)
 Frame(root,width=460,height=480,bg="white").place(x=320,y=30)
-Label(root,text="Money Deposit",font=("Calibri",22,'bold'),fg="dark blue",bg="white").place(x=470,y=100)
+Label(root,text="Money Transfer",font=("Calibri",22,'bold'),fg="dark blue",bg="white").place(x=460,y=100)
 
 
 user = Entry(root, width=31, fg="black", border=0, bg="white", font=("Calibri", 13))
@@ -249,5 +271,5 @@ captche.bind('<FocusIn>',on_enterc)
 captche.bind('<FocusOut>',on_leavec)
 Label(text=captcha_text,font=('Impact',20,'bold', 'italic'),fg='red',bg='light grey',width=15).place(x=450,y=360)
 
-Button(root, width=30, pady=7, text="Deposit Money", bg="Orange", fg="white", border=0, font=("Calibri", 13, 'bold'), command=deposit1).place(x=420, y=420)
+Button(root, width=30, pady=7, text="Transfer Money", bg="Orange", fg="white", border=0, font=("Calibri", 13, 'bold'), command=transfer1).place(x=420, y=420)
 root.mainloop()

@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import subprocess
 import mysql.connector
 
-mydb=mysql.connector.connect(host="localhost",user="root",password="sk270405",database='PyBank')
+mydb=mysql.connector.connect(host="localhost",user="root", password="*******",database='PyBank')
 mycur=mydb.cursor()
 mycur.execute("CREATE DATABASE IF NOT EXISTS PyBank")
 mycur.execute(""" 
